@@ -21,19 +21,25 @@ function App() {
   const [allBookings, setAllBookings] = useState([])
   const [isLoadingBookings, setIsLoadingBookings] = useState(false)
 
+  const [backendError, setBackendError] = useState(null)
+  
   useEffect(() => {
     fetchSlots()
   }, [])
-
+  
   const fetchSlots = async () => {
+    setBackendError(null)
     try {
       const res = await fetch('https://mattr-appointment-app.onrender.com/api/slots')
       if (res.ok) {
         const data = await res.json()
         setSlots(data)
+      } else {
+        setBackendError(`Backend responded with status: ${res.status}`)
       }
     } catch (error) {
       console.error('Error fetching slots:', error)
+      setBackendError('Could not connect to backend. Please check if the Render URL is correct and the server is live.')
     }
   }
 
@@ -167,7 +173,12 @@ function App() {
         )}
 
         <div className="slots-grid">
-          {slots.length === 0 ? (
+          {backendError ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1rem', background: 'rgba(255, 0, 0, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 0, 0, 0.2)' }}>
+              <p style={{ color: '#ff4d4d', marginBottom: '0.5rem' }}>{backendError}</p>
+              <button onClick={fetchSlots} className="btn" style={{ padding: '4px 12px', fontSize: '0.8rem' }}>Retry Connection</button>
+            </div>
+          ) : slots.length === 0 ? (
             <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)' }}>No slots available at the moment.</p>
           ) : (
             slots.map((slot) => (
