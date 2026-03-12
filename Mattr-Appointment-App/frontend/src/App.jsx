@@ -85,7 +85,13 @@ function App() {
     e.preventDefault()
     if (!selectedSlot || !name || !email) return
 
-    setIsSubmitting(true)
+    if (useOffline) {
+      setBookingStatus({ type: 'success', message: 'Offline Demo: Slot booked successfully (locally).' })
+      setSlots(slots.filter(s => s.id !== selectedSlot.id))
+      setSelectedSlot(null)
+      setIsSubmitting(false)
+      return
+    }
 
     try {
       const res = await fetch(`${backendUrl}/api/book`, {
@@ -167,6 +173,9 @@ function App() {
     return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
   }
 
+  const [useOffline, setUseOffline] = useState(false)
+  const currentSlots = useOffline ? INITIAL_SLOTS : slots
+
   return (
     <div className="app-container">
       {/* Left Panel: Booking Interface */}
@@ -184,17 +193,16 @@ function App() {
         )}
 
         <div className="slots-grid">
-          {isLoadingSlots ? (
+          {isLoadingSlots && !useOffline ? (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem' }}>
               <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
-              <p style={{ color: 'var(--text-muted)' }}>Connecting to backend...</p>
+              <p style={{ color: 'var(--text-muted)' }}>Connecting to Render Backend... (May take 40s)</p>
             </div>
-          ) : backendError ? (
+          ) : backendError && !useOffline ? (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1.5rem', background: 'rgba(255, 0, 0, 0.05)', borderRadius: '12px', border: '1px solid rgba(255, 0, 0, 0.1)' }}>
               <p style={{ color: '#ff4d4d', marginBottom: '1rem' }}>{backendError}</p>
               
-              <div style={{ maxWidth: '300px', margin: '0 auto 1.5rem' }}>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Is your Render URL correct?</label>
+              <div style={{ maxWidth: '300px', margin: '0 auto 1rem' }}>
                 <input 
                   type="text" 
                   className="form-input" 
@@ -202,13 +210,17 @@ function App() {
                   onChange={(e) => setBackendUrl(e.target.value)}
                   style={{ fontSize: '0.8rem', padding: '6px 10px', height: 'auto', marginBottom: '8px' }}
                 />
-                <button onClick={() => fetchSlots()} className="btn" style={{ width: '100%', padding: '6px' }}>Try This URL</button>
+                <button onClick={() => fetchSlots()} className="btn" style={{ width: '100%', padding: '6px', marginBottom: '8px' }}>Retry Connection</button>
+                <button onClick={() => setUseOffline(true)} className="btn" style={{ width: '100%', padding: '6px', background: 'var(--glass-border)' }}>Use Offline Mode (Demo Only)</button>
               </div>
             </div>
-          ) : slots.length === 0 ? (
-            <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)' }}>No slots available at the moment.</p>
+          ) : currentSlots.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>No slots returned from backend.</p>
+              <button onClick={() => setUseOffline(true)} className="btn" style={{ padding: '8px 16px' }}>Switch to Demo Slots</button>
+            </div>
           ) : (
-            slots.map((slot) => (
+            currentSlots.map((slot) => (
               <div
                 key={slot.id}
                 className={`slot-card ${selectedSlot?.id === slot.id ? 'selected' : ''}`}
