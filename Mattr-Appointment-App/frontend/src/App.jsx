@@ -33,7 +33,13 @@ function App() {
     setIsLoadingSlots(true)
     setBackendError(null)
     try {
-      const res = await fetch(`${backendUrl}/api/slots`)
+      // Use a controller to timeout the fetch if it takes too long
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+      const res = await fetch(`${backendUrl}/api/slots`, { signal: controller.signal })
+      clearTimeout(timeoutId);
+
       if (res.ok) {
         const data = await res.json()
         setSlots(data)
@@ -43,12 +49,17 @@ function App() {
       }
     } catch (error) {
       console.error('Error fetching slots:', error)
-      // Auto-retry once for Render cold starts
-      if (retryCount < 1) {
+      if (error.name === 'AbortError') {
+        setBackendError('Backend connection timed out. It might be spinning up.')
+      } else {
+        setBackendError('Could not connect to backend. Please check your Render URL.')
+      }
+      
+      // Auto-retry once for Render cold starts, but only if not aborted
+      if (retryCount < 1 && error.name !== 'AbortError') {
         setTimeout(() => fetchSlots(retryCount + 1), 3000)
         return
       }
-      setBackendError('Could not connect to backend. Please check if your Render URL is correct.')
     } finally {
       setIsLoadingSlots(false)
     }
@@ -196,7 +207,16 @@ function App() {
           {isLoadingSlots && !useOffline ? (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem' }}>
               <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
-              <p style={{ color: 'var(--text-muted)' }}>Connecting to Render Backend... (May take 40s)</p>
+              <p style={{ color: 'var(--text-main)', fontWeight: '500' }}>Connecting to Backend...</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Render projects can take ~40s to wake up if inactive.</p>
+              
+              <button 
+                onClick={() => setUseOffline(true)} 
+                className="btn" 
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid var(--glass-border)', padding: '8px 16px', margin: '0 auto' }}
+              >
+                Use Local Demo Mode Instead
+              </button>
             </div>
           ) : backendError && !useOffline ? (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1.5rem', background: 'rgba(255, 0, 0, 0.05)', borderRadius: '12px', border: '1px solid rgba(255, 0, 0, 0.1)' }}>
