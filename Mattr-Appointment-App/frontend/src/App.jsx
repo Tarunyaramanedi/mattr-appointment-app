@@ -15,19 +15,19 @@ function App() {
   const [slots, setSlots] = useState([])
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [bookingStatus, setBookingStatus] = useState(null)
-  
+
   // Admin View State
   const [showBookings, setShowBookings] = useState(false)
   const [allBookings, setAllBookings] = useState([])
   const [isLoadingBookings, setIsLoadingBookings] = useState(false)
-  
+
   useEffect(() => {
     fetchSlots()
   }, [])
-  
+
   const fetchSlots = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/slots')
+      const res = await fetch('https://mattr-appointment-app.onrender.com/api/slots')
       if (res.ok) {
         const data = await res.json()
         setSlots(data)
@@ -40,7 +40,7 @@ function App() {
   const fetchBookings = async () => {
     setIsLoadingBookings(true)
     try {
-      const res = await fetch('http://localhost:5000/api/bookings')
+      const res = await fetch('https://mattr-appointment-app.onrender.com/api/bookings')
       if (res.ok) {
         const data = await res.json()
         setAllBookings(data)
@@ -51,7 +51,7 @@ function App() {
       setIsLoadingBookings(false)
     }
   }
-  
+
   // Form State
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -69,9 +69,9 @@ function App() {
     if (!selectedSlot || !name || !email) return
 
     setIsSubmitting(true)
-    
+
     try {
-      const res = await fetch('http://localhost:5000/api/book', {
+      const res = await fetch('https://mattr-appointment-app.onrender.com/api/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -80,12 +80,12 @@ function App() {
           email
         })
       })
-      
+
       if (res.ok) {
         const data = await res.json()
         setSlots(slots.filter(s => s.id !== selectedSlot.id))
         setBookingStatus({ type: 'success', message: 'Appointment successfully booked! Data saved in backend.' })
-        
+
         // Refresh bookings list if admin panel is open
         if (showBookings && fetchBookings) {
           fetchBookings()
@@ -161,7 +161,7 @@ function App() {
 
         {bookingStatus && (
           <div className={`status-message ${bookingStatus.type}`}>
-             {bookingStatus.type === 'success' && <CheckCircle2 size={20} style={{display: 'inline', marginRight: '8px', verticalAlign: 'middle'}}/>}
+            {bookingStatus.type === 'success' && <CheckCircle2 size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />}
             {bookingStatus.message}
           </div>
         )}
@@ -171,14 +171,14 @@ function App() {
             <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)' }}>No slots available at the moment.</p>
           ) : (
             slots.map((slot) => (
-              <div 
-                key={slot.id} 
+              <div
+                key={slot.id}
                 className={`slot-card ${selectedSlot?.id === slot.id ? 'selected' : ''}`}
                 onClick={() => setSelectedSlot(slot)}
               >
                 <div className="slot-time">{slot.time}</div>
                 <div className="slot-date">
-                  <CalendarIcon size={14} style={{display: 'inline', marginRight: '4px', verticalAlign: 'middle'}}/>
+                  <CalendarIcon size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
                   {formatDate(slot.date)}
                 </div>
               </div>
@@ -190,22 +190,22 @@ function App() {
           <form className="booking-form" onSubmit={handleBook}>
             <div className="form-group">
               <label>Selected Slot</label>
-              <div className="form-input" style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', borderColor: 'var(--primary-color)'}}>
-                <Clock size={16} color="var(--primary-color)"/>
+              <div className="form-input" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', borderColor: 'var(--primary-color)' }}>
+                <Clock size={16} color="var(--primary-color)" />
                 <span>{formatDate(selectedSlot.date)} at {selectedSlot.time}</span>
               </div>
             </div>
 
             <div className="form-group">
               <label htmlFor="name">Your Name</label>
-              <div style={{position: 'relative'}}>
-                <User size={18} style={{position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)'}}/>
-                <input 
-                  type="text" 
-                  id="name" 
+              <div style={{ position: 'relative' }}>
+                <User size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  id="name"
                   required
-                  className="form-input" 
-                  style={{width: '100%', paddingLeft: '38px'}}
+                  className="form-input"
+                  style={{ width: '100%', paddingLeft: '38px' }}
                   placeholder="John Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -215,14 +215,14 @@ function App() {
 
             <div className="form-group">
               <label htmlFor="email">Email Address</label>
-              <div style={{position: 'relative'}}>
-                <Mail size={18} style={{position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)'}}/>
-                <input 
-                  type="email" 
-                  id="email" 
+              <div style={{ position: 'relative' }}>
+                <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="email"
+                  id="email"
                   required
-                  className="form-input" 
-                  style={{width: '100%', paddingLeft: '38px'}}
+                  className="form-input"
+                  style={{ width: '100%', paddingLeft: '38px' }}
                   placeholder="john@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -235,11 +235,11 @@ function App() {
             </button>
           </form>
         )}
-        
-        <div style={{marginTop: '3rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem'}}>
-          <button 
-            className="btn" 
-            style={{background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', width: '100%', border: '1px solid var(--glass-border)'}}
+
+        <div style={{ marginTop: '3rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
+          <button
+            className="btn"
+            style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', width: '100%', border: '1px solid var(--glass-border)' }}
             onClick={() => {
               const willShow = !showBookings;
               setShowBookings(willShow);
@@ -248,25 +248,25 @@ function App() {
           >
             {showBookings ? 'Hide Saved Bookings' : 'View Saved Bookings'}
           </button>
-          
+
           {showBookings && (
-            <div style={{marginTop: '1.5rem', animation: 'fadeIn 0.3s'}}>
-              <h3 style={{marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <div style={{ marginTop: '1.5rem', animation: 'fadeIn 0.3s' }}>
+              <h3 style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Backend Database</span>
-                {isLoadingBookings && <div className="spinner" style={{width: '16px', height: '16px'}}></div>}
+                {isLoadingBookings && <div className="spinner" style={{ width: '16px', height: '16px' }}></div>}
               </h3>
-              
+
               {allBookings.length === 0 && !isLoadingBookings ? (
-                <p style={{color: 'var(--text-muted)'}}>No bookings found in database yet.</p>
+                <p style={{ color: 'var(--text-muted)' }}>No bookings found in database yet.</p>
               ) : (
-                <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {allBookings.map(b => (
-                    <div key={b.id} style={{background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--glass-border)'}}>
-                      <div style={{fontWeight: '600', color: 'var(--primary-color)', marginBottom: '4px'}}>{b.name}</div>
-                      <div style={{fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px'}}>{b.email}</div>
-                      <div style={{display: 'flex', gap: '1rem', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '8px'}}>
-                        <span style={{display: 'flex', alignItems: 'center', gap: '4px'}}><CalendarIcon size={14}/> {formatDate(b.date)}</span>
-                        <span style={{display: 'flex', alignItems: 'center', gap: '4px'}}><Clock size={14}/> {b.time}</span>
+                    <div key={b.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ fontWeight: '600', color: 'var(--primary-color)', marginBottom: '4px' }}>{b.name}</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>{b.email}</div>
+                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '8px' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><CalendarIcon size={14} /> {formatDate(b.date)}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> {b.time}</span>
                       </div>
                     </div>
                   ))}
@@ -278,7 +278,7 @@ function App() {
       </div>
 
       {/* Right Panel: AI Assistant */}
-      <div className="glass-panel" style={{display: 'flex', flexDirection: 'column'}}>
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
         <div className="ai-assistant">
           <div className="ai-header">
             <div className="ai-icon-container">
@@ -286,7 +286,7 @@ function App() {
             </div>
             <div>
               <h2>Mattr AI Assistant</h2>
-              <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>Online</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Online</span>
             </div>
           </div>
 
@@ -300,8 +300,8 @@ function App() {
                       const s = slots.find(slot => slot.id === id);
                       if (!s) return null;
                       return (
-                        <div 
-                          key={id} 
+                        <div
+                          key={id}
                           className="suggestion-chip"
                           onClick={() => setSelectedSlot(s)}
                         >
@@ -314,18 +314,18 @@ function App() {
               </div>
             ))}
             {isAiThinking && (
-              <div className="message ai" style={{display: 'flex', gap: '4px', alignItems: 'center'}}>
-                 <div style={{width: '6px', height: '6px', background: 'var(--text-muted)', borderRadius: '50%', animation: 'fadeIn 0.5s infinite alternate'}}></div>
-                 <div style={{width: '6px', height: '6px', background: 'var(--text-muted)', borderRadius: '50%', animation: 'fadeIn 0.5s 0.2s infinite alternate'}}></div>
-                 <div style={{width: '6px', height: '6px', background: 'var(--text-muted)', borderRadius: '50%', animation: 'fadeIn 0.5s 0.4s infinite alternate'}}></div>
+              <div className="message ai" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <div style={{ width: '6px', height: '6px', background: 'var(--text-muted)', borderRadius: '50%', animation: 'fadeIn 0.5s infinite alternate' }}></div>
+                <div style={{ width: '6px', height: '6px', background: 'var(--text-muted)', borderRadius: '50%', animation: 'fadeIn 0.5s 0.2s infinite alternate' }}></div>
+                <div style={{ width: '6px', height: '6px', background: 'var(--text-muted)', borderRadius: '50%', animation: 'fadeIn 0.5s 0.4s infinite alternate' }}></div>
               </div>
             )}
           </div>
 
           <form onSubmit={handleAiSubmit} className="chat-input-container">
-            <input 
-              type="text" 
-              className="chat-input" 
+            <input
+              type="text"
+              className="chat-input"
               placeholder="Ask for an available time..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
