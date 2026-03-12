@@ -21,32 +21,43 @@ function App() {
   const [allBookings, setAllBookings] = useState([])
   const [isLoadingBookings, setIsLoadingBookings] = useState(false)
 
+  const [isLoadingSlots, setIsLoadingSlots] = useState(true)
+  const [backendUrl, setBackendUrl] = useState('https://mattr-appointment-app.onrender.com')
   const [backendError, setBackendError] = useState(null)
   
   useEffect(() => {
     fetchSlots()
-  }, [])
+  }, [backendUrl])
   
-  const fetchSlots = async () => {
+  const fetchSlots = async (retryCount = 0) => {
+    setIsLoadingSlots(true)
     setBackendError(null)
     try {
-      const res = await fetch('https://mattr-appointment-app.onrender.com/api/slots')
+      const res = await fetch(`${backendUrl}/api/slots`)
       if (res.ok) {
         const data = await res.json()
         setSlots(data)
+        setBackendError(null)
       } else {
         setBackendError(`Backend responded with status: ${res.status}`)
       }
     } catch (error) {
       console.error('Error fetching slots:', error)
-      setBackendError('Could not connect to backend. Please check if the Render URL is correct and the server is live.')
+      // Auto-retry once for Render cold starts
+      if (retryCount < 1) {
+        setTimeout(() => fetchSlots(retryCount + 1), 3000)
+        return
+      }
+      setBackendError('Could not connect to backend. Please check if your Render URL is correct.')
+    } finally {
+      setIsLoadingSlots(false)
     }
   }
 
   const fetchBookings = async () => {
     setIsLoadingBookings(true)
     try {
-      const res = await fetch('https://mattr-appointment-app.onrender.com/api/bookings')
+      const res = await fetch(`${backendUrl}/api/bookings`)
       if (res.ok) {
         const data = await res.json()
         setAllBookings(data)
@@ -77,7 +88,7 @@ function App() {
     setIsSubmitting(true)
 
     try {
-      const res = await fetch('https://mattr-appointment-app.onrender.com/api/book', {
+      const res = await fetch(`${backendUrl}/api/book`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -173,10 +184,26 @@ function App() {
         )}
 
         <div className="slots-grid">
-          {backendError ? (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1rem', background: 'rgba(255, 0, 0, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 0, 0, 0.2)' }}>
-              <p style={{ color: '#ff4d4d', marginBottom: '0.5rem' }}>{backendError}</p>
-              <button onClick={fetchSlots} className="btn" style={{ padding: '4px 12px', fontSize: '0.8rem' }}>Retry Connection</button>
+          {isLoadingSlots ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem' }}>
+              <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
+              <p style={{ color: 'var(--text-muted)' }}>Connecting to backend...</p>
+            </div>
+          ) : backendError ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1.5rem', background: 'rgba(255, 0, 0, 0.05)', borderRadius: '12px', border: '1px solid rgba(255, 0, 0, 0.1)' }}>
+              <p style={{ color: '#ff4d4d', marginBottom: '1rem' }}>{backendError}</p>
+              
+              <div style={{ maxWidth: '300px', margin: '0 auto 1.5rem' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Is your Render URL correct?</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={backendUrl} 
+                  onChange={(e) => setBackendUrl(e.target.value)}
+                  style={{ fontSize: '0.8rem', padding: '6px 10px', height: 'auto', marginBottom: '8px' }}
+                />
+                <button onClick={() => fetchSlots()} className="btn" style={{ width: '100%', padding: '6px' }}>Try This URL</button>
+              </div>
             </div>
           ) : slots.length === 0 ? (
             <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)' }}>No slots available at the moment.</p>
